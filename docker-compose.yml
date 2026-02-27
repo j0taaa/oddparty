@@ -1,0 +1,12 @@
+services:
+  oddparty:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - oddparty_data:/app/data
+
+volumes:
+  oddparty_data:
