@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
-import { listTicketTypes, purchaseTickets } from "@/lib/db";
+import { getEvent, listTicketTypes, purchaseTickets } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { createAsaasPayment } from "@/lib/asaas";
 
 export async function POST(req: Request) {
+  const session = await auth.api.getSession({ headers: req.headers });
+  if (!session?.user) {
+    return NextResponse.redirect(new URL("/auth/sign-in?error=Please+sign+in+to+buy+tickets", req.url));
+  }
+
   const form = await req.formData();
   const eventId = Number(form.get("event_id"));
 
@@ -18,8 +25,24 @@ export async function POST(req: Request) {
   }
 
   try {
-    await purchaseTickets(eventId, String(form.get("buyer_name") ?? ""), String(form.get("buyer_email") ?? ""), items);
-    return NextResponse.redirect(new URL(`/events/${eventId}?success=purchased`, req.url));
+    const event = await getEvent(eventId);
+    if (!event) throw new Error("Event not found.");
+
+    const totalCents = items.reduce((acc, item) => {
+      const ticket = ticketTypes.find((t) => t.id === item.ticketTypeId);
+      return acc + (ticket ? ticket.price_cents * item.quantity : 0);
+    }, 0);
+
+    const asaas = await createAsaasPayment({
+      name: session.user.name,
+      email: session.user.email,
+      totalCents,
+      eventTitle: event.title,
+      eventId
+    });
+
+    const result = await purchaseTickets(eventId, session.user.name, session.user.email, session.user.id, items, asaas);
+    return NextResponse.redirect(new URL(`/events/${eventId}?success=purchased&purchaseId=${result.purchaseId}`, req.url));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Purchase failed";
     return NextResponse.redirect(new URL(`/events/${eventId}?error=${encodeURIComponent(message)}`, req.url));
