@@ -1,29 +1,43 @@
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { getSession } from "@/lib/session";
 
-export default function NewEventPage() {
+export default async function NewEventPage() {
+  const session = await getSession();
+
+  if (!session?.user) {
+    return (
+      <div className="mx-auto max-w-xl px-6 py-12">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign in required</CardTitle>
+            <CardDescription>You need an account before publishing events.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/auth/sign-in">
+              <Button>Sign in</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
       <Card>
         <CardHeader>
           <CardTitle>Create an event</CardTitle>
-          <CardDescription>
-            You can define multiple ticket types. For now this stores in sqlite; Stripe checkout comes next.
-          </CardDescription>
+          <CardDescription>You are signed in as {session.user.email}.</CardDescription>
         </CardHeader>
         <CardContent>
           <form action="/api/events" method="post" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="title">Event title</Label>
-                <Input id="title" name="title" required />
-              </div>
-              <div>
-                <Label htmlFor="organizer_name">Organizer</Label>
-                <Input id="organizer_name" name="organizer_name" required />
-              </div>
+            <div>
+              <Label htmlFor="title">Event title</Label>
+              <Input id="title" name="title" required />
             </div>
 
             <div>
@@ -64,9 +78,6 @@ export default function NewEventPage() {
                 <Input name="ticket_price[]" type="number" min="0" step="0.01" placeholder="Price (EUR)" required />
                 <Input name="ticket_qty[]" type="number" min="1" placeholder="Quantity" required />
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                For now only one ticket tier in UI; API supports multiple values by repeating inputs.
-              </p>
             </div>
 
             <Button type="submit">Publish event</Button>

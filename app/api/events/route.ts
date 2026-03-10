@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createEvent } from "@/lib/db";
+import { auth } from "@/lib/auth";
 
 export async function POST(req: Request) {
+  const session = await auth.api.getSession({ headers: req.headers });
+  if (!session?.user) {
+    return NextResponse.redirect(new URL("/auth/sign-in?error=Please+sign+in+first", req.url));
+  }
+
   const form = await req.formData();
 
   const ticketNames = form.getAll("ticket_name[]").map(String);
@@ -23,8 +29,9 @@ export async function POST(req: Request) {
       venue: String(form.get("venue") ?? ""),
       starts_at: new Date(String(form.get("starts_at") ?? "")).toISOString(),
       category: String(form.get("category") ?? ""),
-      organizer_name: String(form.get("organizer_name") ?? ""),
-      image_url: null
+      organizer_name: session.user.name,
+      image_url: null,
+      organizer_user_id: session.user.id
     },
     tickets.filter((t) => t.name && t.quantity_available > 0)
   );

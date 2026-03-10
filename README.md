@@ -7,7 +7,7 @@ OddParty is an event marketplace starter where people can create small events an
 - **Next.js 14** (App Router)
 - **Bun runtime + package manager**
 - **shadcn/ui-style components** (local UI primitives)
-- **SQLite via `bun:sqlite`**
+- **SQLite via `better-sqlite3`**
 - **Docker / Docker Compose**
 
 ## Features in this iteration
@@ -50,6 +50,6 @@ A named volume `oddparty_data` persists sqlite data in `/app/data`.
 
 Current UI already surfaces upcoming platform plans:
 
-- Stripe payments
+- Asaas payments
 - QR-code tickets
 - In-event extra sales (food, drinks, etc.)
