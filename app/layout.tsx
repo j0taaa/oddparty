@@ -1,11 +1,29 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { getSession } from "@/lib/session";
+import { PwaRegister } from "./pwa-register";
 
 export const metadata: Metadata = {
   title: "OddParty",
-  description: "Create and discover small events and buy tickets."
+  description: "Create and discover small events and buy tickets.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.svg", type: "image/svg+xml", sizes: "192x192" },
+      { url: "/icons/icon-512.svg", type: "image/svg+xml", sizes: "512x512" }
+    ],
+    apple: [{ url: "/icons/icon-192.svg", type: "image/svg+xml" }]
+  },
+  appleWebApp: {
+    capable: true,
+    title: "OddParty",
+    statusBarStyle: "default"
+  }
+};
+
+export const viewport: Viewport = {
+  themeColor: "#7c3aed"
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body>
+        <PwaRegister />
         <header className="border-b bg-white/90 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="text-xl font-bold tracking-tight">
